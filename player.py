@@ -5,7 +5,7 @@ from nn import NeuralNetwork
 from config import CONFIG
 
 
-def find_closest(box_lists):
+def find_closest(agent, box_lists):
     width = CONFIG['WIDTH']
     height = CONFIG['HEIGHT']
 
@@ -13,10 +13,10 @@ def find_closest(box_lists):
         return [1, 1, 1, 1]
 
     if len(box_lists) == 1:
-        return [box_lists[0].x / width, box_lists[0].gap_mid / height, 1, 0.5]
+        return [(agent[0] - box_lists[0].x) / width, box_lists[0].gap_mid / height, 1, 0.5]
 
-    return [box_lists[0].x / width, box_lists[0].gap_mid / height, box_lists[1].x / width,
-            box_lists[1].gap_mid / height]
+    return [(agent[0] - box_lists[0].x) / width, (agent[1] - box_lists[0].gap_mid) / height,
+            (agent[1] - box_lists[1].x) / width, (agent[1] - box_lists[1].gap_mid) / height]
 
 
 class Player:
@@ -102,9 +102,9 @@ class Player:
     def init_network(self):
         layer_sizes = None
         if self.mode == 'gravity':
-            layer_sizes = [7, 20, 1]
+            layer_sizes = [5, 20, 1]
         elif self.mode == 'helicopter':
-            layer_sizes = [7, 20, 1]
+            layer_sizes = [5, 20, 1]
         elif self.mode == 'thrust':
             layer_sizes = [7, 20, 1]
         return layer_sizes
@@ -114,10 +114,10 @@ class Player:
             self.distances += (120 - abs(agent_position[1] - box_lists[0].gap_mid))
             self.boxes += 1
 
-        inputs = find_closest(box_lists)
-        inputs.append(agent_position[0] / CONFIG['WIDTH'])
-        inputs.append(agent_position[1] / CONFIG['HEIGHT'])
-        inputs.append(velocity / 60)
+        inputs = find_closest(agent_position, box_lists)
+        # inputs.append(agent_position[0] / CONFIG['WIDTH'])
+        # inputs.append(agent_position[1] / CONFIG['HEIGHT'])
+        inputs.append(velocity / 10)
         # inputs.append(mode)
         # mode example: 'helicopter'
         # box_lists: an array of `BoxList` objects

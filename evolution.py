@@ -43,7 +43,6 @@ class Evolution:
     def __init__(self, mode):
         self.mode = mode
 
-    # calculate fitness of players
     # def calculate_fitness(self, players, delta_xs):
     #     for i, p in enumerate(players):
     #         if delta_xs[i] < 1000:
@@ -53,16 +52,19 @@ class Evolution:
 
     def calculate_fitness(self, players, delta_xs):
         for i, p in enumerate(players):
-            p.fitness = delta_xs[i] * delta_xs[i] + p.boxes * p.boxes * p.distances * p.distances
+            p.fitness = delta_xs[i] * delta_xs[i] + p.distances * p.distances
 
     def mutate(self, parent):
-        child = copy.copy(parent)
-        child.nn.b0 += np.random.normal(0, 1, child.nn.b0.shape) / 100
-        child.nn.b1 += np.random.normal(0, 1, child.nn.b1.shape) / 100
-        child.nn.b2 += np.random.normal(0, 1, child.nn.b2.shape) / 100
-        child.nn.w0 += np.random.normal(0, 1, child.nn.w0.shape) / 100
-        child.nn.w1 += np.random.normal(0, 1, child.nn.w1.shape) / 100
-        child.nn.w2 += np.random.normal(0, 1, child.nn.w2.shape) / 100
+        c = 10
+        s = 1
+
+        child = copy.deepcopy(parent)
+        child.nn.b0 += np.random.normal(0, s, child.nn.b0.shape) / c
+        child.nn.b1 += np.random.normal(0, s, child.nn.b1.shape) / c
+        child.nn.b2 += np.random.normal(0, s, child.nn.b2.shape) / c
+        child.nn.w0 += np.random.normal(0, s, child.nn.w0.shape) / c
+        child.nn.w1 += np.random.normal(0, s, child.nn.w1.shape) / c
+        child.nn.w2 += np.random.normal(0, s, child.nn.w2.shape) / c
 
         return child
 
@@ -108,7 +110,7 @@ class Evolution:
             random.shuffle(choices)
 
             for i in range(num_players):
-                if random.random() < 0.99:
+                if random.random() < 1:
                     new_players.append(self.mutate(choices[i]))
                 else:
                     new_players.append(choices[i])
