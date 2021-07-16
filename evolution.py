@@ -4,6 +4,7 @@ import random
 from player import Player
 import numpy as np
 from config import CONFIG
+from util import append_list_as_row
 
 
 def weighted_random_choice(num_players, options, total_fitness):
@@ -24,10 +25,17 @@ def sus(num_players, options, total_fitness):
     pick = total_fitness * random.random() / num_players
     for i in range(len(options)):
         current += options[i].fitness
-        if current > pick:
+        while current > pick:
             choices.append(options[i])
             pick += total_fitness / num_players
     return choices
+
+
+def calculate_total_fitness(players):
+    total_fitness = 0
+    for i in range(len(players)):
+        total_fitness += players[i].fitness
+    return total_fitness
 
 
 class Evolution:
@@ -45,63 +53,83 @@ class Evolution:
 
     def calculate_fitness(self, players, delta_xs):
         for i, p in enumerate(players):
-            p.fitness = delta_xs[i] / 10 + p.boxes * p.distances * 10
+            p.fitness = delta_xs[i] * delta_xs[i] + p.boxes * p.boxes * p.distances * p.distances
 
     def mutate(self, parent):
         child = copy.copy(parent)
-        if random.random() < 0.6:
-            child.nn.b0 += np.random.normal(0, 1, child.nn.b0.shape) / 500
-        if random.random() < 0.6:
-            child.nn.b1 += np.random.normal(0, 1, child.nn.b1.shape) / 500
-        if random.random() < 0.6:
-            child.nn.b2 += np.random.normal(0, 1, child.nn.b2.shape) / 500
-        if random.random() < 0.6:
-            child.nn.w0 += np.random.normal(0, 1, child.nn.w0.shape) / 500
-        if random.random() < 0.6:
-            child.nn.w1 += np.random.normal(0, 1, child.nn.w1.shape) / 500
-        if random.random() < 0.6:
-            child.nn.w2 += np.random.normal(0, 1, child.nn.w2.shape) / 500
+        child.nn.b0 += np.random.normal(0, 1, child.nn.b0.shape) / 100
+        child.nn.b1 += np.random.normal(0, 1, child.nn.b1.shape) / 100
+        child.nn.b2 += np.random.normal(0, 1, child.nn.b2.shape) / 100
+        child.nn.w0 += np.random.normal(0, 1, child.nn.w0.shape) / 100
+        child.nn.w1 += np.random.normal(0, 1, child.nn.w1.shape) / 100
+        child.nn.w2 += np.random.normal(0, 1, child.nn.w2.shape) / 100
 
         return child
 
+    def crossover(self, p1, p2):
+        c1, c2 = p1.copy(), p2.copy()
+        if random.random() < 0.5:
+            pt = random.randint(1, len(p1.nn.b0) - 2)
+            c1.nn.b0 = p1.nn.b0[:pt] + p2.nn.b0[pt:]
+            c2.nn.b0 = p2.nn.b0[:pt] + p1.nn.b0[pt:]
+
+            pt = random.randint(1, len(p1.nn.b1) - 2)
+            c1.nn.b1 = p1.nn.b1[:pt] + p2.nn.b1[pt:]
+            c2.nn.b1 = p2.nn.b1[:pt] + p1.nn.b1[pt:]
+
+            pt = random.randint(1, len(p1.nn.b2) - 2)
+            c1.nn.b2 = p1.nn.b2[:pt] + p2.nn.b2[pt:]
+            c2.nn.b2 = p2.nn.b2[:pt] + p1.nn.b2[pt:]
+
+            pt = random.randint(1, len(p1.nn.w0) - 2)
+            c1.nn.w0 = p1.nn.w0[:pt] + p2.nn.w0[pt:]
+            c2.nn.w0 = p2.nn.w0[:pt] + p1.nn.w0[pt:]
+
+            pt = random.randint(1, len(p1.nn.w1) - 2)
+            c1.nn.w1 = p1.nn.w1[:pt] + p2.nn.w1[pt:]
+            c2.nn.w1 = p2.nn.w1[:pt] + p1.nn.w1[pt:]
+
+            pt = random.randint(1, len(p1.nn.w2) - 2)
+            c1.nn.w2 = p1.nn.w2[:pt] + p2.nn.w2[pt:]
+            c2.nn.w2 = p2.nn.w2[:pt] + p1.nn.w2[pt:]
+        return [c1, c2]
+
     def generate_new_population(self, num_players, prev_players=None):
-        # in first generation, we create random players
         if prev_players is None:
             return [Player(self.mode) for _ in range(num_players)]
 
         else:
-            # print("------------------------------------------")
-            # print(players_copy[0].nn.w0)
-
-            total_fitness = 0
-            for i in range(len(prev_players)):
-                total_fitness += prev_players[i].fitness
-                # print(prev_players[i].fitness)
-
             new_players = []
+            random.shuffle(prev_players)
 
-            # choices = sus(num_players, prev_players, total_fitness)
-            choices = weighted_random_choice(num_players, prev_players, total_fitness)
+            # choices = sus(num_players, prev_players, calculate_total_fitness(prev_players))
+            choices = weighted_random_choice(num_players, prev_players, calculate_total_fitness(prev_players))
 
             random.shuffle(choices)
 
             for i in range(num_players):
-                new_players.append(self.mutate(choices[i]))
-            # num_players example: 150
-            # prev_players: an array of `Player` objects
+                if random.random() < 0.99:
+                    new_players.append(self.mutate(choices[i]))
+                else:
+                    new_players.append(choices[i])
 
-            # TODO (additional): implementing crossover
-            # np.random.shuffle(new_players)
+            random.shuffle(new_players)
+
             return new_players
 
-    def next_population_selection(self, players, num_players):
-        new_players = sorted(players, key=lambda x: x.fitness, reverse=True)
+    def next_population_selection(self, players, num_players, gen_num):
+        players.sort(key=lambda x: x.fitness, reverse=True)
+
+        total_fitness = calculate_total_fitness(players)
+        average_fitness = total_fitness / len(players)
+        max_fitness = players[0].fitness
+        min_fitness = players[-1].fitness
+        append_list_as_row("data.csv", [gen_num, average_fitness, max_fitness, min_fitness])
 
         # for i in range(5):
         #     print(new_players[i].fitness)
         # print("---------------------------------------")
 
         # TODO (additional): a selection method other than `top-k`
-        # TODO (additional): plotting
 
-        return new_players[: num_players]
+        return players[: num_players]

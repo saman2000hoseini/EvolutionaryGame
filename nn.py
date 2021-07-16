@@ -30,9 +30,9 @@ activation = np.vectorize(activation)
 class NeuralNetwork:
 
     def __init__(self, layer_sizes):
-        self.b0 = np.zeros((layer_sizes[1], 1))
-        self.b1 = np.zeros((layer_sizes[1], 1))
-        self.b2 = np.zeros((layer_sizes[2], 1))
+        self.b0 = np.random.randn(layer_sizes[1], 1)
+        self.b1 = np.random.randn(layer_sizes[1], 1)
+        self.b2 = np.random.randn(layer_sizes[2], 1)
 
         self.w0 = np.random.randn(layer_sizes[1], layer_sizes[0])
         self.w1 = np.random.randn(layer_sizes[1], layer_sizes[1])

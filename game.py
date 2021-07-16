@@ -88,7 +88,7 @@ class Game:
 
         show_single = False  # shows only a single agent of the current generation, if True
 
-        # random.seed(CONFIG['seed'])
+        random.seed(CONFIG['seed'])
 
         frame_counter = 0
 
@@ -153,7 +153,8 @@ class Game:
                 # evolution.calculate_fitness(prev_players, prev_delta_xs)
 
                 # selection
-                prev_players = evolution.next_population_selection(prev_players + players, CONFIG['num_players'])
+                prev_players = evolution.next_population_selection(prev_players + players, CONFIG['num_players'],
+                                                                   gen_num)
                 for p in prev_players:
                     p.reset_values()
                 prev_alive = [True for _ in range(CONFIG['num_players'])]
@@ -168,7 +169,7 @@ class Game:
                 prev_delta_xs = [0 for _ in range(CONFIG['num_players'])]
                 t = time.time() - CONFIG['box_gap'] / (game_speed * CONFIG['camera_speed'])
 
-                # random.seed(CONFIG['seed'])
+                random.seed(CONFIG['seed'])
 
                 # save generations to file
                 if gen_num % CONFIG['checkpoint_freq'] == 0:
@@ -262,7 +263,7 @@ class Game:
 
         box_lists = []
 
-        # random.seed(CONFIG['seed'])
+        random.seed(CONFIG['seed'])
 
         t = time.time() - CONFIG['box_gap'] / CONFIG['camera_speed']
         show_fps = False
@@ -305,7 +306,7 @@ class Game:
                 self.camera = 0
                 player = Player(mode, control=True)
                 t = time.time() - CONFIG['box_gap'] / CONFIG['camera_speed']
-                # random.seed(CONFIG['seed'])
+                random.seed(CONFIG['seed'])
 
             self.screen.blit(background, [0, 0])  # rendering background
 
@@ -373,7 +374,7 @@ class Game:
 
 
 if __name__ == '__main__':
-    random.seed(time.time())
+    # random.seed(time.time())
     is_play = True if args.play == 'True' else False
     if is_play:
         Game().play(args.mode)
