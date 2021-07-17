@@ -10,10 +10,10 @@ def find_closest(agent, box_lists):
     height = CONFIG['HEIGHT']
 
     if len(box_lists) == 0:
-        return [1, 1, 1, 1]
+        return [0, 0, 0, 0]
 
     if len(box_lists) == 1:
-        return [(agent[0] - box_lists[0].x) / width, box_lists[0].gap_mid / height, 1, 0.5]
+        return [(agent[0] - box_lists[0].x) / width, box_lists[0].gap_mid / height, 0, 0]
 
     return [(agent[0] - box_lists[0].x) / width, (agent[1] - box_lists[0].gap_mid) / height,
             (agent[1] - box_lists[1].x) / width, (agent[1] - box_lists[1].gap_mid) / height]
@@ -31,6 +31,7 @@ class Player:
         self.mode = mode  # game mode
         self.distances = 0
         self.boxes = 0
+        self.score = 0
 
         # neural network architecture (AI mode)
         layer_sizes = self.init_network()
@@ -106,7 +107,7 @@ class Player:
         elif self.mode == 'helicopter':
             layer_sizes = [5, 20, 1]
         elif self.mode == 'thrust':
-            layer_sizes = [7, 20, 1]
+            layer_sizes = [5, 20, 1]
         return layer_sizes
 
     def think(self, mode, box_lists, agent_position, velocity):

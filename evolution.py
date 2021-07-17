@@ -31,6 +31,14 @@ def sus(num_players, options, total_fitness):
     return choices
 
 
+def tournament_selection(population, num):
+    generation = []
+    for i in range(num):
+        parents = random.choices(population, k=num / 10)
+        generation.append(sorted(parents, key=lambda agent: agent.fitness, reverse=True)[0])
+    return generation
+
+
 def calculate_total_fitness(players):
     total_fitness = 0
     for i in range(len(players)):
@@ -43,19 +51,18 @@ class Evolution:
     def __init__(self, mode):
         self.mode = mode
 
-    # def calculate_fitness(self, players, delta_xs):
-    #     for i, p in enumerate(players):
-    #         if delta_xs[i] < 1000:
-    #             p.fitness = delta_xs[i] / 10
-    #         else:
-    #             p.fitness = delta_xs[i] * delta_xs[i]
-
     def calculate_fitness(self, players, delta_xs):
         for i, p in enumerate(players):
-            p.fitness = delta_xs[i] * delta_xs[i] + p.distances * p.distances
+            p.score = delta_xs[i]
+            p.fitness = delta_xs[i]
+
+    # def calculate_fitness(self, players, delta_xs):
+    #     for i, p in enumerate(players):
+    #         p.fitness = delta_xs[i] * delta_xs[i] / 100 + p.distances * p.distances
+    #         p.score = delta_xs[i]
 
     def mutate(self, parent):
-        c = 10
+        c = 1
         s = 1
 
         child = copy.deepcopy(parent)
@@ -69,31 +76,24 @@ class Evolution:
         return child
 
     def crossover(self, p1, p2):
-        c1, c2 = p1.copy(), p2.copy()
+        c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
         if random.random() < 0.5:
             pt = random.randint(1, len(p1.nn.b0) - 2)
-            c1.nn.b0 = p1.nn.b0[:pt] + p2.nn.b0[pt:]
-            c2.nn.b0 = p2.nn.b0[:pt] + p1.nn.b0[pt:]
+            c1.nn.b0 = np.concatenate((p1.nn.b0[:pt], p2.nn.b0[pt:]), axis=0)
+            c2.nn.b0 = np.concatenate((p2.nn.b0[:pt], p1.nn.b0[pt:]), axis=0)
 
             pt = random.randint(1, len(p1.nn.b1) - 2)
-            c1.nn.b1 = p1.nn.b1[:pt] + p2.nn.b1[pt:]
-            c2.nn.b1 = p2.nn.b1[:pt] + p1.nn.b1[pt:]
-
-            pt = random.randint(1, len(p1.nn.b2) - 2)
-            c1.nn.b2 = p1.nn.b2[:pt] + p2.nn.b2[pt:]
-            c2.nn.b2 = p2.nn.b2[:pt] + p1.nn.b2[pt:]
+            c1.nn.b1 = np.concatenate((p1.nn.b1[:pt], p2.nn.b1[pt:]), axis=0)
+            c2.nn.b1 = np.concatenate((p2.nn.b1[:pt], p1.nn.b1[pt:]), axis=0)
 
             pt = random.randint(1, len(p1.nn.w0) - 2)
-            c1.nn.w0 = p1.nn.w0[:pt] + p2.nn.w0[pt:]
-            c2.nn.w0 = p2.nn.w0[:pt] + p1.nn.w0[pt:]
+            c1.nn.w0 = np.concatenate((p1.nn.w0[:pt], p2.nn.w0[pt:]), axis=0)
+            c2.nn.w0 = np.concatenate((p2.nn.w0[:pt], p1.nn.w0[pt:]), axis=0)
 
             pt = random.randint(1, len(p1.nn.w1) - 2)
-            c1.nn.w1 = p1.nn.w1[:pt] + p2.nn.w1[pt:]
-            c2.nn.w1 = p2.nn.w1[:pt] + p1.nn.w1[pt:]
+            c1.nn.w1 = np.concatenate((p1.nn.w1[:pt], p2.nn.w1[pt:]), axis=0)
+            c2.nn.w1 = np.concatenate((p2.nn.w1[:pt], p1.nn.w1[pt:]), axis=0)
 
-            pt = random.randint(1, len(p1.nn.w2) - 2)
-            c1.nn.w2 = p1.nn.w2[:pt] + p2.nn.w2[pt:]
-            c2.nn.w2 = p2.nn.w2[:pt] + p1.nn.w2[pt:]
         return [c1, c2]
 
     def generate_new_population(self, num_players, prev_players=None):
@@ -104,13 +104,16 @@ class Evolution:
             new_players = []
             random.shuffle(prev_players)
 
+            # for i in range(0, len(prev_players), 2):
+            #     prev_players[i], prev_players[i+1] = self.crossover(prev_players[i], prev_players[i+1])
+
             # choices = sus(num_players, prev_players, calculate_total_fitness(prev_players))
             choices = weighted_random_choice(num_players, prev_players, calculate_total_fitness(prev_players))
 
             random.shuffle(choices)
 
             for i in range(num_players):
-                if random.random() < 1:
+                if random.random() < 0.99:
                     new_players.append(self.mutate(choices[i]))
                 else:
                     new_players.append(choices[i])
@@ -120,6 +123,7 @@ class Evolution:
             return new_players
 
     def next_population_selection(self, players, num_players, gen_num):
+        # players = tournament_selection(players, num_players)
         players.sort(key=lambda x: x.fitness, reverse=True)
 
         total_fitness = calculate_total_fitness(players)
@@ -131,7 +135,5 @@ class Evolution:
         # for i in range(5):
         #     print(new_players[i].fitness)
         # print("---------------------------------------")
-
-        # TODO (additional): a selection method other than `top-k`
 
         return players[: num_players]

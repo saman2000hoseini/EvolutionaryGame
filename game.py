@@ -74,7 +74,7 @@ class Game:
             players = evolution.generate_new_population(CONFIG['num_players'],
                                                         prev_players)  # players of the current generation
             gen_num = int(checkpoint_path[checkpoint_path.rfind('/') + 1:]) + 1
-            high_score = max(p.fitness for p in prev_players)
+            high_score = max(p.score for p in prev_players)
 
         delta_xs = [0 for _ in range(CONFIG['num_players'])]  # distance travelled by agent
         prev_delta_xs = [0 for _ in range(CONFIG['num_players'])]  # distance travelled by previous generation agents
@@ -155,6 +155,10 @@ class Game:
                 # selection
                 prev_players = evolution.next_population_selection(prev_players + players, CONFIG['num_players'],
                                                                    gen_num)
+                # save generations to file
+                if gen_num % CONFIG['checkpoint_freq'] == 0:
+                    save_generation(prev_players, gen_num, mode)
+
                 for p in prev_players:
                     p.reset_values()
                 prev_alive = [True for _ in range(CONFIG['num_players'])]
@@ -170,10 +174,6 @@ class Game:
                 t = time.time() - CONFIG['box_gap'] / (game_speed * CONFIG['camera_speed'])
 
                 random.seed(CONFIG['seed'])
-
-                # save generations to file
-                if gen_num % CONFIG['checkpoint_freq'] == 0:
-                    save_generation(prev_players, gen_num, mode)
 
                 continue
 
