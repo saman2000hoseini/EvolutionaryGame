@@ -34,7 +34,7 @@ def sus(num_players, options, total_fitness):
 def tournament_selection(population, num):
     generation = []
     for i in range(num):
-        parents = random.choices(population, k=num / 10)
+        parents = random.choices(population, k=20)
         generation.append(sorted(parents, key=lambda agent: agent.fitness, reverse=True)[0])
     return generation
 
@@ -68,10 +68,8 @@ class Evolution:
         child = copy.deepcopy(parent)
         child.nn.b0 += np.random.normal(0, s, child.nn.b0.shape) / c
         child.nn.b1 += np.random.normal(0, s, child.nn.b1.shape) / c
-        child.nn.b2 += np.random.normal(0, s, child.nn.b2.shape) / c
         child.nn.w0 += np.random.normal(0, s, child.nn.w0.shape) / c
         child.nn.w1 += np.random.normal(0, s, child.nn.w1.shape) / c
-        child.nn.w2 += np.random.normal(0, s, child.nn.w2.shape) / c
 
         return child
 
@@ -82,17 +80,9 @@ class Evolution:
             c1.nn.b0 = np.concatenate((p1.nn.b0[:pt], p2.nn.b0[pt:]), axis=0)
             c2.nn.b0 = np.concatenate((p2.nn.b0[:pt], p1.nn.b0[pt:]), axis=0)
 
-            pt = random.randint(1, len(p1.nn.b1) - 2)
-            c1.nn.b1 = np.concatenate((p1.nn.b1[:pt], p2.nn.b1[pt:]), axis=0)
-            c2.nn.b1 = np.concatenate((p2.nn.b1[:pt], p1.nn.b1[pt:]), axis=0)
-
             pt = random.randint(1, len(p1.nn.w0) - 2)
             c1.nn.w0 = np.concatenate((p1.nn.w0[:pt], p2.nn.w0[pt:]), axis=0)
             c2.nn.w0 = np.concatenate((p2.nn.w0[:pt], p1.nn.w0[pt:]), axis=0)
-
-            pt = random.randint(1, len(p1.nn.w1) - 2)
-            c1.nn.w1 = np.concatenate((p1.nn.w1[:pt], p2.nn.w1[pt:]), axis=0)
-            c2.nn.w1 = np.concatenate((p2.nn.w1[:pt], p1.nn.w1[pt:]), axis=0)
 
         return [c1, c2]
 
