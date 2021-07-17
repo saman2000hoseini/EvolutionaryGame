@@ -10,13 +10,13 @@ def find_closest(agent, box_lists):
     height = CONFIG['HEIGHT']
 
     if len(box_lists) == 0:
-        return [0, 0, 0, 0]
+        return [0, 0, 0]
 
     if len(box_lists) == 1:
-        return [(agent[0] - box_lists[0].x) / width, box_lists[0].gap_mid / height, 0, 0]
+        return [(agent[0] - box_lists[0].x) / width, box_lists[0].gap_mid / height, 0]
 
     return [(agent[0] - box_lists[0].x) / width, (agent[1] - box_lists[0].gap_mid) / height,
-            (agent[1] - box_lists[1].x) / width, (agent[1] - box_lists[1].gap_mid) / height]
+            (agent[1] - box_lists[1].gap_mid) / height]
 
 
 class Player:
@@ -29,17 +29,15 @@ class Player:
         self.v = 0  # vertical velocity
         self.g = 9.8  # gravity constant
         self.mode = mode  # game mode
-        self.distances = 0
-        self.boxes = 0
-        self.score = 0
 
         # neural network architecture (AI mode)
-        layer_sizes = self.init_network()
+        layer_sizes = self.init_network(mode)
 
         self.nn = NeuralNetwork(layer_sizes)
         self.fitness = 0  # fitness of agent
 
     def move(self, box_lists, camera, events=None):
+
         if len(box_lists) != 0:
             if box_lists[0].x - camera + 60 < self.pos[0]:
                 box_lists.pop(0)
@@ -100,30 +98,32 @@ class Player:
                 if mode == 'gravity' and event.key == pygame.K_SPACE:
                     self.direction *= -1
 
-    def init_network(self):
+    def init_network(self, mode):
+
+        # you can change the parameters below
+
         layer_sizes = None
-        if self.mode == 'gravity':
+        if mode == 'gravity':
             layer_sizes = [5, 20, 1]
-        elif self.mode == 'helicopter':
-            layer_sizes = [5, 20, 1]
-        elif self.mode == 'thrust':
+        elif mode == 'helicopter':
+            layer_sizes = [6, 20, 1]
+        elif mode == 'thrust':
             layer_sizes = [5, 20, 1]
         return layer_sizes
 
     def think(self, mode, box_lists, agent_position, velocity):
-        if agent_position[0] == box_lists[0].x:
-            self.distances += (120 - abs(agent_position[1] - box_lists[0].gap_mid))
-            self.boxes += 1
+        y = agent_position[1]
+        inputs = [velocity / 10, y / CONFIG["HEIGHT"]]
+        inputs.extend(find_closest(agent_position, box_lists))
+        inputs.append(((CONFIG["HEIGHT"] - y) / CONFIG["HEIGHT"]) * -1)
 
-        inputs = find_closest(agent_position, box_lists)
-        # inputs.append(agent_position[0] / CONFIG['WIDTH'])
-        # inputs.append(agent_position[1] / CONFIG['HEIGHT'])
-        inputs.append(velocity / 10)
-        # inputs.append(mode)
-        # mode example: 'helicopter'
-        # box_lists: an array of `BoxList` objects
-        # agent_position example: [600, 250]
-        # velocity example: 7
+        if mode == 'thrust':
+            res = self.nn.forward(inputs)
+            if res[0] > res[1] and res[0] > res[2]:
+                return -1
+            elif res[1] > res[0] and res[1] > res[2]:
+                return 0
+            return 1
 
         if self.nn.forward(inputs)[0] < 0.5:
             return -1

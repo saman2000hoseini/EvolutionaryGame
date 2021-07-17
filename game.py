@@ -1,10 +1,7 @@
-import datetime
-
 import pygame
 import time
 import random
 import argparse
-import numpy as np
 
 from player import Player
 from box_list import BoxList
@@ -41,7 +38,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-class Game:
+class Game():
 
     def __init__(self):  # class initializer
 
@@ -74,7 +71,7 @@ class Game:
             players = evolution.generate_new_population(CONFIG['num_players'],
                                                         prev_players)  # players of the current generation
             gen_num = int(checkpoint_path[checkpoint_path.rfind('/') + 1:]) + 1
-            high_score = max(p.score for p in prev_players)
+            high_score = max(p.fitness for p in prev_players)
 
         delta_xs = [0 for _ in range(CONFIG['num_players'])]  # distance travelled by agent
         prev_delta_xs = [0 for _ in range(CONFIG['num_players'])]  # distance travelled by previous generation agents
@@ -150,15 +147,11 @@ class Game:
 
                 # calculate fitness of current and previous agents
                 evolution.calculate_fitness(players, delta_xs)
-                # evolution.calculate_fitness(prev_players, prev_delta_xs)
+                evolution.calculate_fitness(prev_players, prev_delta_xs)
 
                 # selection
                 prev_players = evolution.next_population_selection(prev_players + players, CONFIG['num_players'],
                                                                    gen_num)
-                # save generations to file
-                if gen_num % CONFIG['checkpoint_freq'] == 0:
-                    save_generation(prev_players, gen_num, mode)
-
                 for p in prev_players:
                     p.reset_values()
                 prev_alive = [True for _ in range(CONFIG['num_players'])]
@@ -174,6 +167,10 @@ class Game:
                 t = time.time() - CONFIG['box_gap'] / (game_speed * CONFIG['camera_speed'])
 
                 random.seed(CONFIG['seed'])
+
+                # save generations to file
+                if gen_num % CONFIG['checkpoint_freq'] == 0:
+                    save_generation(prev_players, gen_num, mode)
 
                 continue
 
@@ -210,7 +207,7 @@ class Game:
                             best_player = prev_players[i]
                             break
 
-                    if best_player is None:
+                    if best_player == None:
                         for i in range(len(players)):
                             if delta_xs[i] == 0:
                                 best_player = players[i]
@@ -374,7 +371,6 @@ class Game:
 
 
 if __name__ == '__main__':
-    # random.seed(time.time())
     is_play = True if args.play == 'True' else False
     if is_play:
         Game().play(args.mode)

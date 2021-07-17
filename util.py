@@ -1,6 +1,5 @@
-from csv import writer
-
 import os
+from _csv import writer
 from os.path import join
 import pickle
 from pathlib import Path

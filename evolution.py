@@ -7,15 +7,17 @@ from config import CONFIG
 from util import append_list_as_row
 
 
-def weighted_random_choice(num_players, options, total_fitness):
+def weighted_random_choice(num_players, players, total_fitness):
+    # return np.random.choice(players, num_players, replace=True, p=lambda agent: agent.fitness)
     choices = []
     for i in range(num_players):
         pick = random.uniform(0, total_fitness)
         current = 0
-        for j in range(len(options)):
-            current += options[j].fitness
+        for j in range(len(players)):
+            current += players[j].fitness
             if current > pick:
-                choices.append(options[j])
+                choices.append(players[j])
+                break
     return choices
 
 
@@ -34,8 +36,8 @@ def sus(num_players, options, total_fitness):
 def tournament_selection(population, num):
     generation = []
     for i in range(num):
-        parents = random.choices(population, k=num / 10)
-        generation.append(sorted(parents, key=lambda agent: agent.fitness, reverse=True)[0])
+        parents = random.choices(population, k=10)
+        generation.append(copy.deepcopy(max(parents, key=lambda x: x.fitness)))
     return generation
 
 
@@ -53,25 +55,21 @@ class Evolution:
 
     def calculate_fitness(self, players, delta_xs):
         for i, p in enumerate(players):
-            p.score = delta_xs[i]
             p.fitness = delta_xs[i]
 
-    # def calculate_fitness(self, players, delta_xs):
-    #     for i, p in enumerate(players):
-    #         p.fitness = delta_xs[i] * delta_xs[i] / 100 + p.distances * p.distances
-    #         p.score = delta_xs[i]
-
     def mutate(self, parent):
-        c = 1
-        s = 1
+        s = 0.5
+        p = 0.9
 
         child = copy.deepcopy(parent)
-        child.nn.b0 += np.random.normal(0, s, child.nn.b0.shape) / c
-        child.nn.b1 += np.random.normal(0, s, child.nn.b1.shape) / c
-        child.nn.b2 += np.random.normal(0, s, child.nn.b2.shape) / c
-        child.nn.w0 += np.random.normal(0, s, child.nn.w0.shape) / c
-        child.nn.w1 += np.random.normal(0, s, child.nn.w1.shape) / c
-        child.nn.w2 += np.random.normal(0, s, child.nn.w2.shape) / c
+        if random.random() < p:
+            child.nn.b0 += np.random.normal(0, s, child.nn.b0.shape)
+        if random.random() < p:
+            child.nn.b1 += np.random.normal(0, s, child.nn.b1.shape)
+        if random.random() < p:
+            child.nn.w0 += np.random.normal(0, s, child.nn.w0.shape)
+        if random.random() < p:
+            child.nn.w1 += np.random.normal(0, s, child.nn.w1.shape)
 
         return child
 
@@ -82,48 +80,30 @@ class Evolution:
             c1.nn.b0 = np.concatenate((p1.nn.b0[:pt], p2.nn.b0[pt:]), axis=0)
             c2.nn.b0 = np.concatenate((p2.nn.b0[:pt], p1.nn.b0[pt:]), axis=0)
 
-            pt = random.randint(1, len(p1.nn.b1) - 2)
-            c1.nn.b1 = np.concatenate((p1.nn.b1[:pt], p2.nn.b1[pt:]), axis=0)
-            c2.nn.b1 = np.concatenate((p2.nn.b1[:pt], p1.nn.b1[pt:]), axis=0)
-
             pt = random.randint(1, len(p1.nn.w0) - 2)
             c1.nn.w0 = np.concatenate((p1.nn.w0[:pt], p2.nn.w0[pt:]), axis=0)
             c2.nn.w0 = np.concatenate((p2.nn.w0[:pt], p1.nn.w0[pt:]), axis=0)
 
-            pt = random.randint(1, len(p1.nn.w1) - 2)
-            c1.nn.w1 = np.concatenate((p1.nn.w1[:pt], p2.nn.w1[pt:]), axis=0)
-            c2.nn.w1 = np.concatenate((p2.nn.w1[:pt], p1.nn.w1[pt:]), axis=0)
-
         return [c1, c2]
 
     def generate_new_population(self, num_players, prev_players=None):
+        # in first generation, we create random players
         if prev_players is None:
             return [Player(self.mode) for _ in range(num_players)]
 
         else:
+            prev_players = tournament_selection(prev_players, num_players)
             new_players = []
-            random.shuffle(prev_players)
-
-            # for i in range(0, len(prev_players), 2):
-            #     prev_players[i], prev_players[i+1] = self.crossover(prev_players[i], prev_players[i+1])
-
-            # choices = sus(num_players, prev_players, calculate_total_fitness(prev_players))
-            choices = weighted_random_choice(num_players, prev_players, calculate_total_fitness(prev_players))
-
-            random.shuffle(choices)
-
             for i in range(num_players):
                 if random.random() < 0.99:
-                    new_players.append(self.mutate(choices[i]))
+                    new_players.append(self.mutate(prev_players[i]))
                 else:
-                    new_players.append(choices[i])
-
-            random.shuffle(new_players)
+                    new_players.append(prev_players[i])
 
             return new_players
 
     def next_population_selection(self, players, num_players, gen_num):
-        # players = tournament_selection(players, num_players)
+        players = weighted_random_choice(num_players, players, calculate_total_fitness(players))
         players.sort(key=lambda x: x.fitness, reverse=True)
 
         total_fitness = calculate_total_fitness(players)
@@ -132,8 +112,8 @@ class Evolution:
         min_fitness = players[-1].fitness
         append_list_as_row("data.csv", [gen_num, average_fitness, max_fitness, min_fitness])
 
-        # for i in range(5):
-        #     print(new_players[i].fitness)
-        # print("---------------------------------------")
+        new_players = []
+        for i in range(num_players):
+            new_players.append(self.mutate(players[i]))
 
-        return players[: num_players]
+        return new_players

@@ -9,6 +9,6 @@ CONFIG = {
 
     # Parameters
     'seed': 0,             # map of the game
-    'num_players': 200,    # number of players generated in each step
+    'num_players': 150,    # number of players generated in each step
     'checkpoint_freq': 5   # the frequency of saving generations
 }
