@@ -43,28 +43,23 @@ class Evolution:
     def __init__(self, mode):
         self.mode = mode
 
-    # def calculate_fitness(self, players, delta_xs):
-    #     for i, p in enumerate(players):
-    #         if delta_xs[i] < 1000:
-    #             p.fitness = delta_xs[i] / 10
-    #         else:
-    #             p.fitness = delta_xs[i] * delta_xs[i]
-
     def calculate_fitness(self, players, delta_xs):
         for i, p in enumerate(players):
-            p.fitness = delta_xs[i] * delta_xs[i] + p.distances * p.distances
+            p.fitness = delta_xs[i] # * delta_xs[i]
+
+    # def calculate_fitness(self, players, delta_xs):
+    #     for i, p in enumerate(players):
+    #         p.fitness = delta_xs[i] * delta_xs[i] + p.distances * p.distances
 
     def mutate(self, parent):
-        c = 10
-        s = 1
+        c = 1
+        s = 0.5
 
         child = copy.deepcopy(parent)
         child.nn.b0 += np.random.normal(0, s, child.nn.b0.shape) / c
         child.nn.b1 += np.random.normal(0, s, child.nn.b1.shape) / c
-        child.nn.b2 += np.random.normal(0, s, child.nn.b2.shape) / c
         child.nn.w0 += np.random.normal(0, s, child.nn.w0.shape) / c
         child.nn.w1 += np.random.normal(0, s, child.nn.w1.shape) / c
-        child.nn.w2 += np.random.normal(0, s, child.nn.w2.shape) / c
 
         return child
 
@@ -79,10 +74,6 @@ class Evolution:
             c1.nn.b1 = p1.nn.b1[:pt] + p2.nn.b1[pt:]
             c2.nn.b1 = p2.nn.b1[:pt] + p1.nn.b1[pt:]
 
-            pt = random.randint(1, len(p1.nn.b2) - 2)
-            c1.nn.b2 = p1.nn.b2[:pt] + p2.nn.b2[pt:]
-            c2.nn.b2 = p2.nn.b2[:pt] + p1.nn.b2[pt:]
-
             pt = random.randint(1, len(p1.nn.w0) - 2)
             c1.nn.w0 = p1.nn.w0[:pt] + p2.nn.w0[pt:]
             c2.nn.w0 = p2.nn.w0[:pt] + p1.nn.w0[pt:]
@@ -91,9 +82,6 @@ class Evolution:
             c1.nn.w1 = p1.nn.w1[:pt] + p2.nn.w1[pt:]
             c2.nn.w1 = p2.nn.w1[:pt] + p1.nn.w1[pt:]
 
-            pt = random.randint(1, len(p1.nn.w2) - 2)
-            c1.nn.w2 = p1.nn.w2[:pt] + p2.nn.w2[pt:]
-            c2.nn.w2 = p2.nn.w2[:pt] + p1.nn.w2[pt:]
         return [c1, c2]
 
     def generate_new_population(self, num_players, prev_players=None):
