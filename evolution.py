@@ -75,7 +75,7 @@ class Evolution:
 
     def crossover(self, p1, p2):
         c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
-        if random.random() < 0.5:
+        if random.random() < 0.6:
             pt = random.randint(1, len(p1.nn.b0) - 2)
             c1.nn.b0 = np.concatenate((p1.nn.b0[:pt], p2.nn.b0[pt:]), axis=0)
             c2.nn.b0 = np.concatenate((p2.nn.b0[:pt], p1.nn.b0[pt:]), axis=0)
@@ -94,8 +94,8 @@ class Evolution:
             new_players = []
             random.shuffle(prev_players)
 
-            # for i in range(0, len(prev_players), 2):
-            #     prev_players[i], prev_players[i+1] = self.crossover(prev_players[i], prev_players[i+1])
+            for i in range(0, len(prev_players), 2):
+                prev_players[i], prev_players[i+1] = self.crossover(prev_players[i], prev_players[i+1])
 
             # choices = sus(num_players, prev_players, calculate_total_fitness(prev_players))
             choices = weighted_random_choice(num_players, prev_players, calculate_total_fitness(prev_players))
