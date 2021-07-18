@@ -117,13 +117,13 @@ class Player:
         inputs.extend(find_closest(agent_position, box_lists))
         inputs.append(((CONFIG["HEIGHT"] - y) / CONFIG["HEIGHT"]) * -1)
 
-        if mode == 'thrust':
-            res = self.nn.forward(inputs)
-            if 0.3 < res[0] < 0.7:
-                return 0
-            elif res[0] < 0.3:
-                return -1
-            return 1
+        # if mode == 'thrust':
+        #     res = self.nn.forward(inputs)
+        #     if 0.3 < res[0] < 0.7:
+        #         return 0
+        #     elif res[0] < 0.3:
+        #         return -1
+        #     return 1
 
         if self.nn.forward(inputs)[0] < 0.5:
             return -1
