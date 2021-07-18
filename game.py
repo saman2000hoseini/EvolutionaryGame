@@ -147,7 +147,7 @@ class Game():
 
                 # calculate fitness of current and previous agents
                 evolution.calculate_fitness(players, delta_xs)
-                # evolution.calculate_fitness(prev_players, prev_delta_xs)
+                evolution.calculate_fitness(prev_players, prev_delta_xs)
 
                 # selection
                 prev_players = evolution.next_population_selection(prev_players + players, CONFIG['num_players'],

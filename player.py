@@ -104,26 +104,28 @@ class Player:
 
         layer_sizes = None
         if mode == 'gravity':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         elif mode == 'helicopter':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         elif mode == 'thrust':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         return layer_sizes
 
     def think(self, mode, box_lists, agent_position, velocity):
+        boxes = [box_list for box_list in box_lists if box_list.x >= agent_position[0]]
+
         y = agent_position[1]
         inputs = [velocity / 10, y / CONFIG["HEIGHT"]]
-        inputs.extend(find_closest(agent_position, box_lists))
-        inputs.append(((CONFIG["HEIGHT"] - y) / CONFIG["HEIGHT"]) * -1)
+        inputs.extend(find_closest(agent_position, boxes))
 
-        # if mode == 'thrust':
-        #     res = self.nn.forward(inputs)
-        #     if 0.3 < res[0] < 0.7:
-        #         return 0
-        #     elif res[0] < 0.3:
-        #         return -1
-        #     return 1
+        if mode == 'thrust':
+            inputs[0] = inputs[0] / 50
+            # res = self.nn.forward(inputs)
+            # if res[0] > res[1] and res[0] > res[2]:
+            #     return -1
+            # if res[1] > res[0] and res[1] > res[2]:
+            #     return 0
+            # return 1
 
         if self.nn.forward(inputs)[0] < 0.5:
             return -1

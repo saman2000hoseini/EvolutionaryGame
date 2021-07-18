@@ -37,7 +37,8 @@ def tournament_selection(population, num):
     generation = []
     for i in range(num):
         parents = np.random.choice(population, 10, replace=False)
-        generation.append(copy.deepcopy(max(parents, key=lambda x: x.fitness)))
+        generation.append(max(parents, key=lambda x: x.fitness))
+        population.remove(generation[-1])
     return generation
 
 
@@ -62,8 +63,8 @@ class Evolution:
         p = 0.9
 
         if self.mode == 'thrust':
-            s = 1
-            p = 0.99
+            s = 0.5
+            p = 0.9
 
         child = copy.deepcopy(parent)
         if random.random() < p:
@@ -116,7 +117,8 @@ class Evolution:
             return new_players
 
     def next_population_selection(self, players, num_players, gen_num):
-        players = tournament_selection(players, num_players)
+        if len(players) > num_players:
+            players = tournament_selection(players, num_players)
         players.sort(key=lambda x: x.fitness, reverse=True)
 
         total_fitness = calculate_total_fitness(players)
