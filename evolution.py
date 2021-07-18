@@ -93,9 +93,13 @@ class Evolution:
 
         else:
             prev_players = tournament_selection(prev_players, num_players)
+
+            for i in range(0, len(prev_players), 2):
+                prev_players[i], prev_players[i+1] = self.crossover(prev_players[i], prev_players[i+1])
+
             new_players = []
             for i in range(num_players):
-                if random.random() < 0.99:
+                if random.random() < 0.5:
                     new_players.append(self.mutate(prev_players[i]))
                 else:
                     new_players.append(prev_players[i])
