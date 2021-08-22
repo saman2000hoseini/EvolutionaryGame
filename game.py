@@ -38,7 +38,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-class Game():
+class Game:
 
     def __init__(self):  # class initializer
 
